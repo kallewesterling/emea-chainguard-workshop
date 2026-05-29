@@ -1,0 +1,19 @@
+#!/bin/bash
+set -euo pipefail
+
+if [ -z "${ORGANIZATION:-}" ]; then
+  fail-message "ORGANIZATION is not set."
+  exit 1
+fi
+
+# Check that cosign has been used — look for a cached cosign result or verify
+# the image signature directly as part of the check
+if ! cosign verify \
+  --certificate-oidc-issuer=https://issuer.enforce.dev \
+  --certificate-identity-regexp="https://issuer.enforce.dev/.*" \
+  "cgr.dev/${ORGANIZATION}/python:latest" &>/dev/null; then
+  fail-message "Could not verify the signature for cgr.dev/${ORGANIZATION}/python:latest. Make sure you ran 'cosign verify' with the correct flags."
+  exit 1
+fi
+
+echo "Image signature verified successfully."

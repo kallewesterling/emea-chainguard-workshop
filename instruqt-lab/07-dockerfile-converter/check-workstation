@@ -1,0 +1,22 @@
+#!/bin/bash
+set -euo pipefail
+
+# Check dockerfile.cgr was generated
+if [ ! -f /root/workshop/examples/dfc/dockerfile.cgr ]; then
+  fail-message "dockerfile.cgr not found. Run: dfc dockerfile --org \${ORGANIZATION} > dockerfile.cgr"
+  exit 1
+fi
+
+# Check it's not empty
+if [ ! -s /root/workshop/examples/dfc/dockerfile.cgr ]; then
+  fail-message "dockerfile.cgr is empty. Re-run: dfc dockerfile --org \${ORGANIZATION} > dockerfile.cgr"
+  exit 1
+fi
+
+# Check converted Dockerfile references cgr.dev
+if ! grep -q "cgr.dev" /root/workshop/examples/dfc/dockerfile.cgr; then
+  fail-message "The converted Dockerfile doesn't reference cgr.dev. Make sure you used --org \${ORGANIZATION}."
+  exit 1
+fi
+
+echo "Dockerfile successfully converted to Chainguard format."

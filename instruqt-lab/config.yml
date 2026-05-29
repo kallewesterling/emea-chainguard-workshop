@@ -1,0 +1,17 @@
+version: "3"
+virtualmachines:
+- name: workstation
+  image: projects/instruqt-core/global/images/ubuntu-2204-lts
+  shell: /bin/bash
+  machine_type: n1-standard-4
+  environment:
+    ORGANIZATION: ${CHAINGUARD_ORG}
+    PULL_TOKEN: ${CHAINGUARD_PULL_TOKEN}
+
+secrets:
+- name: CHAINGUARD_ORG
+  title: "Chainguard Organization Name"
+  description: "Your Chainguard organization name (e.g. mycompany.de). Found in top-left of console.chainguard.dev."
+- name: CHAINGUARD_PULL_TOKEN
+  title: "Chainguard Pull Token"
+  description: "A pull token for your Chainguard organization. Create one at console.chainguard.dev under Settings > Pull Tokens."

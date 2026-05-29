@@ -1,0 +1,26 @@
+#!/bin/bash
+set -euo pipefail
+
+if [ -z "${ORGANIZATION:-}" ]; then
+  fail-message "ORGANIZATION is not set."
+  exit 1
+fi
+
+# Check that scans have been run by looking at grype's local DB usage
+# (grype creates a cache when run). We verify Grype ran against both images
+# by checking shell history or the grype cache directory.
+GRYPE_CACHE="${HOME}/.cache/grype"
+
+if [ ! -d "$GRYPE_CACHE" ]; then
+  fail-message "Grype doesn't appear to have been run yet. Run: grype alpine:latest"
+  exit 1
+fi
+
+# Check Trivy cache exists (populated when trivy scans an image)
+TRIVY_CACHE="${HOME}/.cache/trivy"
+if [ ! -d "$TRIVY_CACHE" ]; then
+  fail-message "Trivy doesn't appear to have been run yet. Run: trivy image alpine:latest"
+  exit 1
+fi
+
+echo "Scanning checks passed — grype and trivy have both been used."

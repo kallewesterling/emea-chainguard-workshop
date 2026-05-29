@@ -1,0 +1,17 @@
+#!/bin/bash
+set -euo pipefail
+
+# Check the image was built
+if ! docker image inspect cgr-python:standard &>/dev/null; then
+  fail-message "Image 'cgr-python:standard' not found. Run: docker build -f dockerfile -t cgr-python:standard ."
+  exit 1
+fi
+
+# Check the image can run and produces expected output
+OUTPUT=$(docker run --rm -v /root/workshop/examples/python/starter:/app cgr-python:standard 2>&1 || true)
+if ! echo "$OUTPUT" | grep -qi "linux\|hello"; then
+  fail-message "The container ran but produced unexpected output: ${OUTPUT}. Check your app.py and Dockerfile."
+  exit 1
+fi
+
+echo "Image built and runs correctly."

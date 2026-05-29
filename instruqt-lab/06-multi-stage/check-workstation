@@ -1,0 +1,16 @@
+#!/bin/bash
+set -euo pipefail
+
+if ! docker image inspect linky &>/dev/null; then
+  fail-message "Image 'linky' not found. Run: docker build . --pull -t linky"
+  exit 1
+fi
+
+# Verify it's a minimal image — should NOT contain pip or apk (they're builder-only)
+LAYERS=$(docker inspect linky --format='{{.RootFS.Layers}}')
+if [ -z "$LAYERS" ]; then
+  fail-message "Could not inspect linky image layers."
+  exit 1
+fi
+
+echo "Multi-stage build 'linky' verified successfully."

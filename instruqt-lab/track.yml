@@ -1,0 +1,37 @@
+slug: chainguard-images-workshop
+id: ""
+type: track
+title: "Chainguard Images: Hands-On Security Workshop"
+teaser: Learn to use Chainguard Images to eliminate CVEs, verify provenance, and build secure container pipelines.
+description: |
+  In this hands-on workshop you will:
+  - Pull and compare Chainguard Images against public alternatives
+  - Scan images for CVEs using Grype and Trivy
+  - Verify image signatures and SBOM attestations with Cosign
+  - Build multi-stage Docker images using Chainguard Python
+  - Convert existing Dockerfiles with the dfc tool
+  - Explore Wolfi packages with apk
+
+  You will need a Chainguard organization. Your organization name and a pull token
+  are provided as environment variables in the sandbox.
+icon: https://avatars.githubusercontent.com/u/91070644
+tags:
+- chainguard
+- security
+- containers
+- supply-chain
+- devsecops
+owner: chainguard
+developers:
+- kalle.westerling@chainguard.dev
+show_timer: true
+skipping_enabled: false
+timelimit: 7200
+lab_config:
+  sidebar_enabled: true
+  feedback_recap_enabled: true
+  feedback_tab_enabled: true
+  theme:
+    name: modern-dark
+  default_layout: AssignmentRight
+  default_layout_sidebar_size: 50

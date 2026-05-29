@@ -1,0 +1,10 @@
+#!/bin/bash
+set -euo pipefail
+
+# Pre-substitute ORGANIZATION in the starter dockerfile if available
+if [ -n "${ORGANIZATION:-}" ]; then
+  if [ -f /root/workshop/examples/python/starter/dockerfile ]; then
+    sed -i "s|{{ORGANIZATION}}|${ORGANIZATION}|g" \
+      /root/workshop/examples/python/starter/dockerfile
+  fi
+fi

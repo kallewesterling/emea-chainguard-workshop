@@ -1,0 +1,30 @@
+#!/bin/bash
+set -euo pipefail
+
+# Check all required tools are available
+for tool in chainctl docker grype syft trivy jq yq cosign dfc git; do
+  if ! command -v "$tool" &>/dev/null; then
+    fail-message "Tool '$tool' is not installed or not in PATH."
+    exit 1
+  fi
+done
+
+# Check Docker daemon is running
+if ! docker info &>/dev/null; then
+  fail-message "Docker daemon is not running. Try: systemctl start docker"
+  exit 1
+fi
+
+# Check ORGANIZATION is set
+if [ -z "${ORGANIZATION:-}" ]; then
+  fail-message "The ORGANIZATION environment variable is not set. Make sure it's exported: export ORGANIZATION=yourOrgName"
+  exit 1
+fi
+
+# Check cgr.dev is reachable (pull a small public image)
+if ! docker pull cgr.dev/chainguard/wolfi-base:latest &>/dev/null; then
+  fail-message "Could not pull from cgr.dev. Check your Docker auth configuration."
+  exit 1
+fi
+
+echo "All checks passed!"

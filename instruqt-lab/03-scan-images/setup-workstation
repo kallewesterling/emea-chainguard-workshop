@@ -1,0 +1,53 @@
+#!/bin/bash
+set -euo pipefail
+
+# Create a notes file for the learner to record scan results
+cat > /root/scan-results.txt << 'EOF'
+# Vulnerability Scan Results
+# Record your findings here as you scan each image.
+
+## alpine:latest
+### Trivy
+- Total vulnerabilities:
+- Critical:
+- High:
+- Medium:
+- Low:
+
+### Grype
+- Total vulnerabilities:
+
+---
+
+## python:latest (public)
+### Trivy
+- Total vulnerabilities:
+
+### Grype
+- Total vulnerabilities:
+
+---
+
+## cgr.dev/$ORGANIZATION/python:latest (Chainguard)
+### Trivy
+- Total vulnerabilities:
+
+### Grype
+- Total vulnerabilities:
+
+---
+
+## cgr.dev/$ORGANIZATION/python:latest-dev (Chainguard dev)
+### Trivy
+- Total vulnerabilities:
+
+### Grype
+- Total vulnerabilities:
+
+---
+
+## Observations
+(What differences did you notice? Why might Grype and Trivy report different counts?)
+
+EOF
+echo "Notes file created at /root/scan-results.txt"

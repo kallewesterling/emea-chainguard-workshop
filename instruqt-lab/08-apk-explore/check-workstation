@@ -1,0 +1,10 @@
+#!/bin/bash
+set -euo pipefail
+
+# Check that wolfi-base was pulled (proxy for having run an interactive session)
+if ! docker image inspect cgr.dev/chainguard/wolfi-base:latest &>/dev/null; then
+  fail-message "cgr.dev/chainguard/wolfi-base doesn't appear to have been pulled. Run: docker run -it --rm --entrypoint /bin/sh cgr.dev/chainguard/wolfi-base"
+  exit 1
+fi
+
+echo "Wolfi package exploration complete."

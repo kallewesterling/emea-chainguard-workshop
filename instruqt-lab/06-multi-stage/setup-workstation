@@ -1,0 +1,9 @@
+#!/bin/bash
+set -euo pipefail
+
+if [ -n "${ORGANIZATION:-}" ]; then
+  DOCKERFILE="/root/workshop/examples/python/multi-stage/Dockerfile"
+  if [ -f "$DOCKERFILE" ]; then
+    sed -i "s|{{ORGANIZATION}}|${ORGANIZATION}|g" "$DOCKERFILE"
+  fi
+fi

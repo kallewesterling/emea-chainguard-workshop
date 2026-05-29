@@ -1,0 +1,96 @@
+#!/bin/bash
+set -euxo pipefail
+
+# Wait for Instruqt host bootstrap to finish
+until [ -f /opt/instruqt/bootstrap/host-bootstrap-completed ]; do
+  sleep 1
+done
+
+export DEBIAN_FRONTEND=noninteractive
+
+# ── System packages ──────────────────────────────────────────────────────────
+apt-get update -y
+apt-get install -y \
+  curl wget git jq unzip ca-certificates gnupg lsb-release \
+  apt-transport-https software-properties-common
+
+# ── Docker ───────────────────────────────────────────────────────────────────
+install -m 0755 -d /etc/apt/keyrings
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg \
+  | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+chmod a+r /etc/apt/keyrings/docker.gpg
+echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] \
+  https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" \
+  | tee /etc/apt/sources.list.d/docker.list
+apt-get update -y
+apt-get install -y docker-ce docker-ce-cli containerd.io
+systemctl enable docker
+systemctl start docker
+usermod -aG docker root
+
+# ── yq ───────────────────────────────────────────────────────────────────────
+YQ_VERSION="v4.44.2"
+wget -qO /usr/local/bin/yq \
+  "https://github.com/mikefarah/yq/releases/download/${YQ_VERSION}/yq_linux_amd64"
+chmod +x /usr/local/bin/yq
+
+# ── Grype ────────────────────────────────────────────────────────────────────
+curl -sSfL https://raw.githubusercontent.com/anchore/grype/main/install.sh \
+  | sh -s -- -b /usr/local/bin
+
+# ── Syft ─────────────────────────────────────────────────────────────────────
+curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh \
+  | sh -s -- -b /usr/local/bin
+
+# ── Trivy ────────────────────────────────────────────────────────────────────
+wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key \
+  | gpg --dearmor -o /usr/share/keyrings/trivy.gpg
+echo "deb [signed-by=/usr/share/keyrings/trivy.gpg] \
+  https://aquasecurity.github.io/trivy-repo/deb generic main" \
+  | tee /etc/apt/sources.list.d/trivy.list
+apt-get update -y
+apt-get install -y trivy
+
+# ── Cosign ───────────────────────────────────────────────────────────────────
+COSIGN_VERSION=$(curl -s https://api.github.com/repos/sigstore/cosign/releases/latest \
+  | jq -r .tag_name)
+wget -qO /usr/local/bin/cosign \
+  "https://github.com/sigstore/cosign/releases/download/${COSIGN_VERSION}/cosign-linux-amd64"
+chmod +x /usr/local/bin/cosign
+
+# ── chainctl ─────────────────────────────────────────────────────────────────
+curl -sL https://dl.enforce.dev/chainctl/latest/chainctl_linux_amd64.tar.gz \
+  | tar xz -C /usr/local/bin
+chmod +x /usr/local/bin/chainctl
+
+# ── dfc ──────────────────────────────────────────────────────────────────────
+DFC_VERSION=$(curl -s https://api.github.com/repos/chainguard-dev/dfc/releases/latest \
+  | jq -r .tag_name)
+wget -qO /tmp/dfc.tar.gz \
+  "https://github.com/chainguard-dev/dfc/releases/download/${DFC_VERSION}/dfc_linux_amd64.tar.gz"
+tar xz -C /usr/local/bin -f /tmp/dfc.tar.gz dfc
+chmod +x /usr/local/bin/dfc
+
+# ── Clone workshop repo ───────────────────────────────────────────────────────
+git clone https://github.com/julianklodzinski/emea-chainguard-workshop.git \
+  /root/workshop
+chmod -R 755 /root/workshop
+
+# ── Set ORGANIZATION env globally ────────────────────────────────────────────
+echo "export ORGANIZATION=${CHAINGUARD_ORG:-}" >> /etc/profile.d/workshop.sh
+echo "export PULL_TOKEN=${CHAINGUARD_PULL_TOKEN:-}" >> /etc/profile.d/workshop.sh
+
+# ── Configure Docker to use the pull token for cgr.dev ───────────────────────
+if [ -n "${CHAINGUARD_PULL_TOKEN:-}" ] && [ -n "${CHAINGUARD_ORG:-}" ]; then
+  mkdir -p /root/.docker
+  # Create Docker config with pull token credentials
+  echo "${CHAINGUARD_PULL_TOKEN}" | docker login cgr.dev \
+    --username "pull_token_${CHAINGUARD_ORG}" \
+    --password-stdin || true
+fi
+
+# ── Warm up Grype & Trivy DBs ────────────────────────────────────────────────
+grype db update || true
+trivy image --download-db-only || true
+
+echo "==> Workshop environment ready"

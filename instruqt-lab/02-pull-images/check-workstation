@@ -1,0 +1,20 @@
+#!/bin/bash
+set -euo pipefail
+
+if [ -z "${ORGANIZATION:-}" ]; then
+  fail-message "ORGANIZATION is not set."
+  exit 1
+fi
+
+for img in \
+  "cgr.dev/${ORGANIZATION}/python:latest" \
+  "cgr.dev/${ORGANIZATION}/python:latest-dev" \
+  "python:latest" \
+  "alpine:latest"; do
+  if ! docker image inspect "$img" &>/dev/null; then
+    fail-message "Image '$img' has not been pulled. Run: docker pull $img"
+    exit 1
+  fi
+done
+
+echo "All four images are present locally."
